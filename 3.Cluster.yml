@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: AWS-ECS-Micropost-Cluster
+
+Parameters: 
+  ClusterName:
+    Description: cluster name
+    Type: String
+    Default: aws-ecs-micropost-cluster
+
+Resources: 
+#ECSクラスター
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref ClusterName
+      Tags: 
+      - Key: Name
+        Value: !Ref ClusterName
