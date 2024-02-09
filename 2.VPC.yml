@@ -3,7 +3,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: AWS-ECS-Micropost-VPC
 
 Parameters: 
- #環境名
   EnvironmentName:
     Description: environment name for resourse name
     Type: String
