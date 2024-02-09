@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: AWS-ECS-Micropost-VPC
+
+Parameters: 
+  EnvironmentName:
+    Description: environment name for resourse name
+    Type: String
+    Default: aws-ecs-micropost-vpc
+ #VPCのCIDRレンジ
+  VpcCIDR:
+    Description: CIDR range for VPC
+    Type: String
+    Default: 13.19.0.0/16
+ #サブネットIPレンジ
+  PublicSubnet1CIDR:
+    Description: IP range for first public-subnet availability-zone
+    Type: String
+    Default: 13.19.0.0/24
+  PublicSubnet2CIDR:
+    Description: IP range for second public-subnet availability-zone
+    Type: String
+    Default: 13.19.3.0/24
+  PrivateSubnet1CIDR:
+    Description: IP range for first private-subnet availability-zone
+    Type: String
+    Default: 13.19.1.0/24
+  PrivateSubnet2CIDR:
+    Description: IP range for second private-subnet availability-zone
+    Type: String
+    Default: 13.19.9.0/24
+
+Resources: 
+#VPC#
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: 
+      - Key: Name
+        Value: !Ref EnvironmentName
+#パブリックサブネット
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !GetAtt Vpc.VpcId
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags: 
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Public Subnet1
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !GetAtt Vpc.VpcId
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags: 
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Public Subnet2
+#プライベートサブネット
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !GetAtt Vpc.VpcId
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags: 
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Subnet1
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !GetAtt Vpc.VpcId
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags: 
+      - Key: Name
+        Value: !Sub ${EnvironmentName} Private Subnet2
+#インターネットゲートウェイ
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: 
+      - Key: Name
+        Value: !Ref EnvironmentName
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !GetAtt Vpc.VpcId
+      InternetGatewayId: !Ref InternetGateway
+#パブリックルートテーブル
+  PublicRoutetable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !GetAtt Vpc.VpcId
+      Tags: 
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Public Routes
+  PublicRoute:
+    DependsOn: InternetGatewayAttachment
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRoutetable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway      
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRoutetable
+      SubnetId: !Ref PublicSubnet1
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRoutetable
+      SubnetId: !Ref PublicSubnet2
+
+#プライベートルートテーブル
+  PrivateRoutetable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !GetAtt Vpc.VpcId
+      Tags: 
+        - Key: Name
+          Value: !Sub ${EnvironmentName} Private Routes
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRoutetable
+      SubnetId: !Ref PrivateSubnet1
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRoutetable
+      SubnetId: !Ref PrivateSubnet2
+      
+Outputs:
+  Vpc:
+    Description: The subnet ID to use for subnet of rds
+    Value:
+      Ref: Vpc
+    Export:
+      Name: Vpc
+  PrivateSubnet1:
+    Description: The subnet ID to use for subnet of rds
+    Value:
+      Ref: PrivateSubnet1
+    Export:
+      Name: PrivateSubnet1
+  PrivateSubnet2:
+    Description: The subnet ID to use for subnet of rds
+    Value:
+      Ref: PrivateSubnet2
+    Export:
+      Name: PrivateSubnet2
+  
