@@ -1,13 +1,10 @@
 AWSTemplateFormatVersion: 2010-09-09
-
 Description: AWS-ECS-Micropost-RDS
-
 Parameters: 
 #環境名
   DbName:
     Type: String
     Default: MicropostRDS
-
 Resources: 
 #セキュリティグループ
 #EC2セキュリティグループ
@@ -54,7 +51,6 @@ Resources:
       FromPort: 3306
       ToPort: 3306
       SourceSecurityGroupId: !Ref Ec2SecurityGroup
-
 #RDS
   RdsSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
