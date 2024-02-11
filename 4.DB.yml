@@ -82,3 +82,10 @@ Resources:
       VPCSecurityGroups: 
         - !Ref RdsSecurityGroup
 
+Outputs:
+  Ec2SecurityGroup:
+    Description: The SecurityGroup to use for resouces
+    Value: !Ref Ec2SecurityGroup
+    Export:
+      Name: Ec2SecurityGroup
+
