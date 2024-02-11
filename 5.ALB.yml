@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: ALB for Micropost
+
+Parameters: 
+#環境名
+  AlbName:
+    Type: String
+    Default: MicropostALB
+
+Resources: 
+#ALBセキュリティグループ
+  AlbSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Securitygroup for ALB
+      VpcId: !ImportValue Vpc
+      SecurityGroupIngress: 
+         - CidrIp: 0.0.0.0/0
+           IpProtocol: 80
+      Tags: 
+        - Key: Name 
+          Value: !Sub ${AlbName} securitygroup
+  AlbToEC2Egress:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      Description: EgressSecuritygroup for ALBToEC2
+      GroupId: !Ref AlbSecurityGroup
+      IpProtocol: tcp
+      FromPort: 32768
+      ToPort: 60999
+      DestinationSecurityGroupId: !ImportValue Ec2SecurityGroup
+ #EC2セキュリティグループ
+  AlbToEC2Ingress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: IngressSecuritygroup for ALBToEC2
+      GroupId: !ImportValue Ec2SecurityGroup
+      IpProtocol: tcp
+      FromPort: 32768
+      ToPort: 60999
+      SourceSecurityGroupId: !Ref AlbSecurityGroup
+
+#ALB
+  MicropostAlb:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: MicropostAlb
+      Type: application 
+      Scheme: internet-facing
+      IpAddressType: ipv4
+      SecurityGroups: 
+        - !Ref AlbSecurityGroup
+      Subnets: 
+        - !ImportValue PublicSubnet1
+        - !ImportValue PublicSubnet2
+      Tags: 
+        - Key: Name
+          Value: !Ref AlbName
+#ALBターゲットグループ
+  MicropostAlbTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !ImportValue Vpc
+      Protocol: HTTP
+      Port: 8080
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      Tags: 
+        - Key: Name
+          Value: !Sub ${AlbName} TagetGroup
+#ALBリスナー
+  MicropostAlbListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref MicropostAlb
+      Port: 80
+      Protocol: HTTP
+      DefaultActions: 
+        - Type: forward
+          TargetGroupArn: !Ref MicropostAlbTargetGroup
