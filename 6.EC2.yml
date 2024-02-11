@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: EC2 Container for Micropost
+
+Parameters: 
+#環境名
+  Ec2ContainerName:
+    Type: String
+    Default: MicropostEc2Container
+  ClusterName:
+    Description: cluster name
+    Type: String
+    Default: aws-ecs-micropost-cluster
+  MicropostImageId:
+    Type: AWS::SSM::Parameter::Value<String>
+    Default: /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id
+
+Resources: 
+#Elastic IP
+  MicropostEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags: 
+        - Key: Name 
+          Value: MicropostEIP
+#NatGateway 
+  MicropostNatGateway:
+    DependsOn: MicropostEIP
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt MicropostEIP.AllocationId
+      SubnetId: !ImportValue PublicSubnet1
+      Tags: 
+        - Key: Name 
+          Value: MicropostNatGateway
+#NatGatewayRoute
+  NatGatewayRoute:
+    DependsOn: MicropostNatGateway
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !ImportValue PrivateRoutetable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref MicropostNatGateway   
+
+#AutoScaling
+  MicropostAutoScaling:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref MicropostAutoScalingConfiguration  
+      AutoScalingGroupName: MicropostAutoScalingConfiguration
+      VPCZoneIdentifier: 
+        - !ImportValue PrivateSubnet1
+        - !ImportValue PrivateSubnet2
+      MinSize: 0
+      MaxSize: 4
+      DesiredCapacity: 0
+      Tags: 
+        - Key: Name 
+          Value: MicropostAutoScaling
+          PropagateAtLaunch: true
+  MicropostAutoScalingConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      IamInstanceProfile: !Ref MicropostAutoscalingInstanceProfile
+      ImageId: !Ref MicropostImageId
+      InstanceType: t2.micro
+      KeyName: cloudtech
+      SecurityGroups: 
+        - !ImportValue Ec2SecurityGroup
+      UserData:
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            echo ECS_CLUSTER=${ClusterName} > /etc/ecs/ecs.config
+            mkdir -p /data/public
+            chown -R 1000:1000 /data
+          - {
+              CLUSTERNAME: !Ref ClusterName
+            }
+#インスタンスプロファイル
+  MicropostAutoscalingInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - Ref: MicropostAutoscalingInstanceRole
+#ロール指定
+  MicropostAutoscalingInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: ECSContainerInstancePermissions
+          PolicyDocument: 
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecs:RegisterContainerInstance
+                  - ecs:DeregisterContainerInstance
+                  - ecs:UpdateContainerInstancesState
+                Resource: !ImportValue Cluster
+              - Effect: Allow
+                Action:
+                  - ecs:DiscoverPollEndpoint
+                  - ecs:Submit*
+                  - ecs:Poll
+                  - ecs:StartTelemetrySession
+                Resource: "*"
+              - Effect: Allow
+                Action: 
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:GetAuthorizationToken
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogStreams
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/${AWS::StackName}*
