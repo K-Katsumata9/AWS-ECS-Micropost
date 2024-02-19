@@ -14,3 +14,9 @@ Resources:
       Tags: 
       - Key: Name
         Value: !Ref ClusterName
+Outputs:
+  ClusterArn:
+    Description: The Cluster to use for resouces
+    Value: !GetAtt Cluster.Arn
+    Export:
+      Name: ClusterArn

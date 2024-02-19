@@ -43,9 +43,13 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref MicropostNatGateway   
 
-#AutoScaling
+#AutoScaling起動設定
   MicropostAutoScaling:
     Type: AWS::AutoScaling::AutoScalingGroup
+    CreationPolicy:
+      ResourceSignal:
+        Count: 0
+        Timeout: PT5M
     Properties:
       LaunchConfigurationName: !Ref MicropostAutoScalingConfiguration  
       AutoScalingGroupName: MicropostAutoScalingConfiguration
@@ -58,7 +62,7 @@ Resources:
       Tags: 
         - Key: Name 
           Value: MicropostAutoScaling
-          PropagateAtLaunch: true
+          PropagateAtLaunch: "true"
   MicropostAutoScalingConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -69,9 +73,10 @@ Resources:
       SecurityGroups: 
         - !ImportValue Ec2SecurityGroup
       UserData:
-        Fn::Base64: !Sub |
-          - #!/bin/bash
-            echo ECS_CLUSTER=${ClusterName} > /etc/ecs/ecs.config
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
+            echo ECS_CLUSTER=${CLUSTERNAME} > /etc/ecs/ecs.config
             mkdir -p /data/public
             chown -R 1000:1000 /data
           - {
@@ -106,7 +111,7 @@ Resources:
                   - ecs:RegisterContainerInstance
                   - ecs:DeregisterContainerInstance
                   - ecs:UpdateContainerInstancesState
-                Resource: !ImportValue Cluster
+                Resource: !ImportValue ClusterArn
               - Effect: Allow
                 Action:
                   - ecs:DiscoverPollEndpoint

@@ -14,10 +14,23 @@ Resources:
       GroupDescription: Securitygroup for EC2
       VpcId: !ImportValue Vpc
       SecurityGroupIngress: 
-         - CidrIp: 0.0.0.0/0
-           IpProtocol: 22
-         - CidrIp: 0.0.0.0/0
-           IpProtocol: 80
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
       Tags: 
         - Key: Name 
           Value: aws-ecs-micropost-ec2 securitygroup
