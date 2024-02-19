@@ -69,7 +69,7 @@ Resources:
       VpcId: !GetAtt Vpc.VpcId
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
       CidrBlock: !Ref PrivateSubnet1CIDR
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       Tags: 
       - Key: Name
         Value: !Sub ${EnvironmentName} Private Subnet1
@@ -79,7 +79,7 @@ Resources:
       VpcId: !GetAtt Vpc.VpcId
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
       CidrBlock: !Ref PrivateSubnet2CIDR
-      MapPublicIpOnLaunch: true
+      MapPublicIpOnLaunch: false
       Tags: 
       - Key: Name
         Value: !Sub ${EnvironmentName} Private Subnet2
@@ -146,6 +146,11 @@ Outputs:
     Value: !Ref Vpc
     Export:
       Name: Vpc
+  PrivateRoutetable:
+    Description: The PrivateRoutetable to use for subnet of resouces
+    Value: !Ref PrivateRoutetable
+    Export:
+      Name: PrivateRoutetable
   PublicSubnet1:
     Description: The subnet ID to use for subnet of resouces
     Value: !Ref PublicSubnet1
