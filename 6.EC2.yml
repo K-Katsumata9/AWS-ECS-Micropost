@@ -24,6 +24,7 @@ Resources:
       Tags: 
         - Key: Name 
           Value: MicropostEIP
+          
 #NatGateway 
   MicropostNatGateway:
     DependsOn: MicropostEIP
