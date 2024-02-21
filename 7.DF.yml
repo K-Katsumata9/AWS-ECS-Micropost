@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: TackDefinition for AWS-ECS-Micropost
+
+Parameters:
+# デプロイするコンテナイメージのタグを指定する。デフォルトはlatest.
+  ApplicationImageTag:
+    Type: String
+    Description: Application Docker Image Tag
+    Default: latest  
+  MysqlPassword:
+    Type: AWS::SSM::Parameter::Name
+    Default: /micropost/rds/password
+
+Resources: 
+  MicropostTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: micropost
+      Volumes:
+        - Name: public
+          Host:
+            SourcePath: /data/public
+      ContainerDefinitions:
+        - Name: micropost
+          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/micropost:${ApplicationImageTag}
+          MemoryReservation: 395
+          Cpu: 245
+          MountPoints:
+            - SourceVolume: public
+              ContainerPath: /public
+          Environment:
+            - Name: MYSQL_HOST
+              Value: !ImportValue RdsEndpoint
+            - Name: MYSQL_PASSWORD
+              Value: !Ref MysqlPassword
+          Command: 
+            - rails 
+            - server
+            - -p
+            - 3000
+            - -b
+            - 0.0.0.0
+          PortMappings:
+            - ContainerPort: 3000
+              HostPort: 0
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Sub /${AWS::StackName}/ecs/micropost
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: docker
+#CloudWatch Logsロググループ作成
+  ApplicationLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /${AWS::StackName}/ecs/micropost
+      RetentionInDays: 3
