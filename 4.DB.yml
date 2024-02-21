@@ -101,4 +101,9 @@ Outputs:
     Value: !Ref Ec2SecurityGroup
     Export:
       Name: Ec2SecurityGroup
+  RdsEndpoint:
+    Description: The RDSEndpoint to use for resouces
+    Value: !GetAtt Rds.Endpoint.Address
+    Export:
+      Name: RdsEndpoint
 
