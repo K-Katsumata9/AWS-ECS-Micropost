@@ -5,7 +5,6 @@ volumes:
     driver: local
   public:
     driver: local
-
 services: 
   release:
     image: 410898520882.dkr.ecr.ap-northeast-1.amazonaws.com/micropost:latest
@@ -13,29 +12,27 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      host: db
-      username: root
-      password: Adsf4231!
-  app:
-    image: 410898520882.dkr.ecr.ap-northeast-1.amazonaws.com/micropost:${APP_VERSION}
-    extends:
-      service: release
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: Adsf4231!
+    volumes: 
+      - public:/public
     healthcheck:
       test: curl -fs localhost:3000
       interval: 3s
       retries: 10
-    volumes: 
-      - .:/micropost
-    ports: 
-      - 3000
+  app:
+    image: 410898520882.dkr.ecr.ap-northeast-1.amazonaws.com/micropost:${APP_VERSION}
+    extends:
+      service: release
     depends_on:
       db:
         condition: service_healthy
-      migrate:
-        condition: service_started
-    links:
-      - db
-    command: rails s -p 3000 -b 0.0.0.0
+    ports: 
+      - 3000
+    command: >
+      /bin/sh -c 'rails s -p 3000 -b 0.0.0.0'
+
   migrate:
     extends:
       service: release
@@ -45,21 +42,20 @@ services:
     command: >
       /bin/sh -c '
       rails db:create && 
-      rails db:migrate 
+      rails db:migrate
       '
   db:
     image: mysql:8.2 
     container_name: db
-    environment: 
-      MYSQL_ROOT_USER: root
-      MYSQL_ROOT_PASSWORD: Adsf4231!
     volumes: 
       - db_data:/var/lib/mysql 
     restart: always
+    environment:
+      MYSQL_PASSWORD: Adsf4231!
+      MYSQL_ROOT_PASSWORD: Adsf4231!
     ports:
       - "3306:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
       interval: 3s
-      retries: 10    
-    
+      retries: 10
