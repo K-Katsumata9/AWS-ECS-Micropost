@@ -1,8 +1,0 @@
-=== puma startup: 2024-02-19 16:33:09 +0900 ===
-2024-02-19 16:33:16 +0900 Rack app ("GET /" - (127.0.0.1)): #<LoadError: Error loading the 'mysql2' Active Record adapter. Missing a gem it depends on? mysql2 is not part of the bundle. Add it to your Gemfile.>
-=== puma startup: 2024-02-19 16:35:27 +0900 ===
-=== puma startup: 2024-02-19 16:38:08 +0900 ===
-=== puma startup: 2024-02-19 16:38:38 +0900 ===
-=== puma startup: 2024-02-19 16:38:55 +0900 ===
-=== puma startup: 2024-02-19 16:39:46 +0900 ===
-=== puma startup: 2024-02-19 10:20:29 +0000 ===
