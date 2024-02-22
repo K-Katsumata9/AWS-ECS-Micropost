@@ -8,10 +8,13 @@ Parameters:
     Type: String
     Description: Application Docker Image Tag
     Default: latest  
-  MysqlPassword:
-    Type: AWS::SSM::Parameter::Name
-    Default: /micropost/rds/password
+    
+  DatabasePassword:
+    Type: String
+    Description: Database password
+    NoEcho: "true"
 
+    
 Resources: 
   MicropostTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -32,8 +35,10 @@ Resources:
           Environment:
             - Name: MYSQL_HOST
               Value: !ImportValue RdsEndpoint
+            - Name: MYSQL_USER
+              Value: admin
             - Name: MYSQL_PASSWORD
-              Value: !Ref MysqlPassword
+              Value: !Ref DatabasePassword
           Command: 
             - rails 
             - server
@@ -56,6 +61,7 @@ Resources:
     Properties:
       LogGroupName: !Sub /${AWS::StackName}/ecs/micropost
       RetentionInDays: 3
+
 Outputs:
   EcsTask: 
     Description: The TASK Definition to use for resouces
