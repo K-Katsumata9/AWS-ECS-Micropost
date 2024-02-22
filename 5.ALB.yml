@@ -17,7 +17,9 @@ Resources:
       VpcId: !ImportValue Vpc
       SecurityGroupIngress: 
          - CidrIp: 0.0.0.0/0
-           IpProtocol: 80
+           IpProtocol: tcp
+           FromPort: 80
+           ToPort: 80
       Tags: 
         - Key: Name 
           Value: !Sub ${AlbName} securitygroup
@@ -63,7 +65,7 @@ Resources:
     Properties:
       VpcId: !ImportValue Vpc
       Protocol: HTTP
-      Port: 8080
+      Port: 3000
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 30
