@@ -20,7 +20,6 @@ release:
 	docker-compose up --abort-on-container-exit migrate
 	docker-compose up app
 
-#追記箇所
 publish:
 	docker-compose push release app
 
