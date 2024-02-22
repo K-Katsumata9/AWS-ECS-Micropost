@@ -80,3 +80,10 @@ Resources:
       DefaultActions: 
         - Type: forward
           TargetGroupArn: !Ref MicropostAlbTargetGroup
+
+Outputs:
+  MicropostAlbTargetGroup: 
+    Description: The TargetGroup to use for resouces
+    Value: !Ref MicropostAlbTargetGroup
+    Export:
+      Name: MicropostAlbTargetGroup
