@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: ECS Service for AWS-ECS-Micropost
+
+Resources: 
+  MicropostEcsService:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !ImportValue ClusterArn
+      TaskDefinition: !ImportValue EcsTask
+      Role: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS
+      LoadBalancers: 
+        - ContainerName: micropost
+          ContainerPort: 3000
+          TargetGroupArn: !ImportValue MicropostAlbTargetGroup
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
