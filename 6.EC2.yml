@@ -74,8 +74,9 @@ Resources:
       SecurityGroups: 
         - !ImportValue Ec2SecurityGroup
       UserData:
-        Fn::Base64: !Sub |
-          - #!/bin/bash
+        Fn::Base64: !Sub
+          - |
+            #!/bin/bash
             echo ECS_CLUSTER=${CLUSTERNAME} > /etc/ecs/ecs.config
             mkdir -p /data/public
             chown -R 1000:1000 /data
