@@ -1,4 +1,4 @@
-.PHONY: test release clean version login logout publish
+.PHONY: test build release clean version login logout publish
 
 export APP_VERSION ?= $(shell git rev-parse --short HEAD)
 
@@ -10,6 +10,10 @@ login:
 
 logout:
 	docker logout 410898520882.dkr.ecr.ap-northeast-1.amazonaws.com
+
+build:
+	docker-compose build release
+	docker-compose build app
 
 release:
 	docker-compose up release
