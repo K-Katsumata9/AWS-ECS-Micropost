@@ -56,3 +56,9 @@ Resources:
     Properties:
       LogGroupName: !Sub /${AWS::StackName}/ecs/micropost
       RetentionInDays: 3
+Outputs:
+  EcsTask: 
+    Description: The TASK Definition to use for resouces
+    Value: !Ref MicropostTaskDefinition
+    Export:
+      Name: EcsTask
